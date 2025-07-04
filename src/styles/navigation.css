@@ -1,0 +1,251 @@
+/* Navigation Sidebar Styles */
+.nav-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  min-width: 240px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1f2937 0%, #111827 100%);
+  border-right: 1px solid #374151;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.15);
+  padding: 1.5rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+/* Logo Section */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 0.5rem 2rem 0.5rem;
+  border-bottom: 1px solid #374151;
+  margin-bottom: 2rem;
+}
+
+/* Main Navigation Menu */
+.nav-menu {
+  flex-grow: 1;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Navigation Item Base Styles */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #d1d5db;
+  background: transparent;
+  border: none;
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Navigation Item Icon */
+.nav-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Navigation Item Label */
+.nav-item-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Hover State */
+.nav-item:hover:not(.active) {
+  background: rgba(55, 65, 81, 0.8);
+  color: #f3f4f6;
+  transform: translateX(2px);
+}
+
+.nav-item:hover:not(.active) .nav-item-icon {
+  transform: scale(1.05);
+}
+
+/* Active State */
+.nav-item.active {
+  background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 
+    0 4px 12px rgba(124, 58, 237, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.1);
+  transform: translateX(4px);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #ffffff;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Focus States for Accessibility */
+.nav-item:focus-visible {
+  outline: 2px solid #7c3aed;
+  outline-offset: 2px;
+}
+
+/* Footer Section */
+.nav-footer {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #374151;
+}
+
+/* User Info Section */
+.nav-user-info {
+  margin-bottom: 1rem;
+}
+
+/* Logout Button */
+.nav-logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: #ef4444;
+  background: transparent;
+  border: none;
+  text-align: left;
+}
+
+.nav-logout-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  transform: translateX(2px);
+}
+
+.nav-logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.nav-logout-btn:focus-visible {
+  outline: 2px solid #ef4444;
+  outline-offset: 2px;
+}
+
+/* Auth Prompt */
+.nav-auth-prompt {
+  padding: 1rem;
+  background: rgba(55, 65, 81, 0.5);
+  border-radius: 8px;
+  border: 1px solid #374151;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .nav-sidebar {
+    width: 200px;
+    min-width: 200px;
+    padding: 1rem 0.75rem;
+  }
+  
+  .nav-logo {
+    padding: 0 0.25rem 1.5rem 0.25rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .nav-item {
+    padding: 0.75rem 0.875rem;
+    font-size: 0.8rem;
+  }
+  
+  .nav-item-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .nav-sidebar {
+    display: none; /* Hide sidebar on mobile, implement mobile menu separately */
+  }
+}
+
+/* Dark mode support (if needed) */
+@media (prefers-color-scheme: dark) {
+  .nav-sidebar {
+    background: linear-gradient(180deg, #0f172a 0%, #020617 100%);
+    border-right-color: #1e293b;
+  }
+  
+  .nav-logo {
+    border-bottom-color: #1e293b;
+  }
+  
+  .nav-footer {
+    border-top-color: #1e293b;
+  }
+  
+  .nav-user-info .bg-gray-800 {
+    background-color: #0f172a;
+  }
+  
+  .nav-auth-prompt {
+    background: rgba(15, 23, 42, 0.8);
+    border-color: #1e293b;
+  }
+}
+
+/* Animation for smooth transitions */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.nav-item {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Loading state for logout button */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.nav-logout-btn .animate-spin {
+  animation: spin 1s linear infinite;
+}

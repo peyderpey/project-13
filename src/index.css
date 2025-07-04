@@ -1,0 +1,204 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import navigation styles */
+@import './styles/navigation.css';
+
+@layer base {
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Ensure proper box sizing */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  /* Remove default margins and paddings */
+  * {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Improve text rendering */
+  html {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Improve focus indicators */
+  :focus-visible {
+    outline: 2px solid #7c3aed;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 262 83% 58%; /* Purple */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%; /* Light blue/gray */
+    --secondary-foreground: 222 47% 11%;
+    --accent: 43 100% 66%; /* Gold/amber */
+    --accent-foreground: 0 0% 20%;
+    --success: 160 84% 39%; /* Green */
+    --success-foreground: 0 0% 100%;
+    --warning: 43 100% 66%; /* Amber */
+    --warning-foreground: 0 0% 20%;
+    --error: 0 84% 60%; /* Red */
+    --error-foreground: 0 0% 100%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 222 20% 50%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 20% 90%;
+    --input: 210 20% 90%;
+    --ring: 262 83% 58%;
+    --chart-1: 262 83% 58%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 43 100% 66%;
+    --chart-4: 210 40% 96%;
+    --chart-5: 0 84% 60%;
+    --radius: 0.75rem;
+  }
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 0 0% 100%;
+    --card: 222 47% 13%;
+    --card-foreground: 0 0% 100%;
+    --popover: 222 47% 13%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 262 83% 68%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 20%;
+    --secondary-foreground: 0 0% 100%;
+    --accent: 43 100% 66%;
+    --accent-foreground: 0 0% 20%;
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 43 100% 66%;
+    --warning-foreground: 0 0% 20%;
+    --error: 0 84% 60%;
+    --error-foreground: 0 0% 100%;
+    --muted: 210 40% 20%;
+    --muted-foreground: 210 20% 80%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 20% 30%;
+    --input: 210 20% 30%;
+    --ring: 262 83% 68%;
+    --chart-1: 262 83% 68%;
+    --chart-2: 160 84% 39%;
+    --chart-3: 43 100% 66%;
+    --chart-4: 210 40% 20%;
+    --chart-5: 0 84% 60%;
+    --radius: 0.75rem;
+  }
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Loading states */
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #7c3aed;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Utility classes for common patterns */
+.safe-area-pb {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.animate-in {
+  animation: slideInUp 0.3s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .nav-sidebar {
+    border-right: 2px solid #000;
+  }
+  
+  .nav-item {
+    border: 1px solid transparent;
+  }
+  
+  .nav-item:hover,
+  .nav-item.active {
+    border-color: #fff;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

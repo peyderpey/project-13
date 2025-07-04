@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+description: |
+  This rule ensures that the readme.md file is loaded into Cursor and kept up to date.
+  It helps maintain documentation synchronization with code changes.
+
+run: |
+  # Load the readme.md file content
+  cat readme.md > .cursor/cache/readme.md
+
+  # Watch for changes and update
+  while inotifywait -e modify readme.md; do
+    cat readme.md > .cursor/cache/readme.md
+  done
+
+
+---
