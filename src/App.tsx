@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { Header } from './components/Header';
-import { SideMenu } from './components/SideMenu';
+import { MobileNavigation } from './components/MobileNavigation';
 import { ScriptUpload } from './components/ScriptUpload';
 import { ScriptLibrary } from './components/ScriptLibrary';
 import { CharacterSelection } from './components/CharacterSelection';
@@ -18,6 +18,7 @@ import { useAppSettings } from './hooks/useAppSettings';
 import { Button } from './components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from './components/ui/card';
 import { ThemeToggle } from './components/ThemeToggle';
+import { Layout, MainContent } from './components/Layout';
 
 type AppState = 'library' | 'upload' | 'character-selection' | 'starting-point' | 'practice';
 type PracticeMode = 'auto' | 'manual';
@@ -36,7 +37,7 @@ function App() {
   const [scriptLanguage, setScriptLanguage] = useState('en'); // Original language of the script
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [showSideMenu, setShowSideMenu] = useState(false);
+
   const [showStartingPointSelector, setShowStartingPointSelector] = useState(false);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [startingLineIndex, setStartingLineIndex] = useState(0);
@@ -283,8 +284,7 @@ function App() {
     setStartingLineIndex(0);
   }, []);
 
-  const handleMenuClick = useCallback(() => setShowSideMenu(true), []);
-  const handleMenuClose = useCallback(() => setShowSideMenu(false), []);
+
   const handleSettingsClick = useCallback(() => setShowSettings(true), []);
   const handleSettingsClose = useCallback(() => setShowSettings(false), []);
   const handleStartingPointClose = useCallback(() => {
@@ -352,10 +352,19 @@ function App() {
   ]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header onMenuClick={handleMenuClick} />
+    <Layout>
+      {/* Mobile Navigation with integrated header */}
+      <MobileNavigation
+        currentView={currentState}
+        onBackToLibrary={handleBackToLibrary}
+        onExitSession={handleBackToCharacterSelection}
+        onSettingsClick={handleSettingsClick}
+      />
       
-      <main className="container mx-auto px-4 py-8">
+      {/* Desktop Header */}
+      <Header />
+      
+      <MainContent>
         {currentState === 'library' && (
           <div className="space-y-8">
             <ScriptLibrary onScriptSelect={handleScriptLoaded} />
@@ -470,18 +479,11 @@ function App() {
               isSpeechDetected={isSpeechDetected}
             />
           )
-        )}
-      </main>
+                  )}
+      </MainContent>
+    </Layout>
 
-      {/* Side Menu */}
-      <SideMenu
-        isOpen={showSideMenu}
-        onClose={handleMenuClose}
-        onSettingsClick={handleSettingsClick}
-        onBackToLibrary={handleBackToLibrary}
-        onExitSession={handleBackToCharacterSelection}
-        currentView={currentState}
-      />
+
 
       {/* Starting Point Selector Modal - Now Always Shown After Character Selection */}
       <StartingPointSelector

@@ -14,17 +14,7 @@ const hideOptions = [
   { value: 'hide-all', label: 'Hide All', icon: EyeOff }
 ];
 
-const PracticeHeader = ({
-  scriptTitle,
-  selectedCharacter,
-  hideLevel,
-  setHideLevel,
-  showHideDropdown,
-  setShowHideDropdown,
-  t,
-  hiddenWordsMap,
-  onBack
-}: {
+interface PracticeHeaderProps {
   scriptTitle: string;
   selectedCharacter: string;
   hideLevel: string;
@@ -34,33 +24,52 @@ const PracticeHeader = ({
   t: (key: string) => string;
   hiddenWordsMap: React.MutableRefObject<Map<string, Set<number>>>;
   onBack: () => void;
+}
+
+const PracticeHeader: React.FC<PracticeHeaderProps> = ({
+  scriptTitle,
+  selectedCharacter,
+  hideLevel,
+  setHideLevel,
+  showHideDropdown,
+  setShowHideDropdown,
+  t,
+  hiddenWordsMap,
+  onBack
 }) => (
-  <div className="sticky top-0 z-40 bg-card shadow-sm border-b border-border">
+  <div className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm shadow-sm border-b border-border">
     <div className="flex items-center justify-between px-4 py-3">
-      {/* Back Button */}
+      {/* Back Button - Mobile optimized */}
       <Button
         variant="ghost"
         onClick={onBack}
-        className="flex items-center space-x-2 text-muted-foreground hover:text-foreground"
+        className="flex items-center space-x-2 text-muted-foreground hover:text-foreground min-h-[44px] px-3"
+        size="sm"
       >
         <ArrowRight className="w-4 h-4 rotate-180" />
-        <span className="text-sm font-medium">Back</span>
+        <span className="text-sm font-medium hidden sm:inline">Back</span>
       </Button>
 
-      {/* Title */}
-      <div className="text-center">
-        <h1 className="text-lg font-semibold text-foreground">{scriptTitle}</h1>
-        <Badge variant="secondary" className="mt-1">
+      {/* Title - Responsive */}
+      <div className="text-center flex-1 px-4">
+        <h1 className="text-base sm:text-lg font-semibold text-foreground truncate">
+          {scriptTitle}
+        </h1>
+        <Badge variant="secondary" className="mt-1 text-xs">
           {selectedCharacter}
         </Badge>
       </div>
 
-      {/* Hide Options Dropdown */}
+      {/* Hide Options Dropdown - Mobile optimized */}
       <DropdownMenu open={showHideDropdown} onOpenChange={setShowHideDropdown}>
         <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="flex items-center space-x-2">
+          <Button 
+            variant="outline" 
+            className="flex items-center space-x-1 sm:space-x-2 min-h-[44px] px-2 sm:px-3"
+            size="sm"
+          >
             <Eye className="w-4 h-4" />
-            <span className="text-sm font-medium">Hide</span>
+            <span className="text-sm font-medium hidden sm:inline">Hide</span>
             <ChevronDown className="w-3 h-3" />
           </Button>
         </DropdownMenuTrigger>
@@ -76,7 +85,7 @@ const PracticeHeader = ({
                   // Clear cached hidden words when changing level
                   hiddenWordsMap.current.clear();
                 }}
-                className={`flex items-center space-x-3 ${
+                className={`flex items-center space-x-3 min-h-[44px] ${
                   hideLevel === option.value ? 'bg-primary/10 text-primary' : ''
                 }`}
               >

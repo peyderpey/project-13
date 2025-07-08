@@ -225,8 +225,8 @@ export const ScriptLibrary: React.FC<ScriptLibraryProps> = ({ onScriptSelect }) 
   // }
 
   return (
-    <div className="relative max-w-6xl mx-auto pb-24">
-      <div className="text-center mb-8">
+    <div className="relative max-w-6xl mx-auto pb-24 px-4 sm:px-6 lg:px-8">
+      <div className="text-center mb-6 sm:mb-8">
         <h2 className="text-3xl font-bold text-foreground mb-2">
           {t('library.title')}
         </h2>
@@ -321,7 +321,7 @@ export const ScriptLibrary: React.FC<ScriptLibraryProps> = ({ onScriptSelect }) 
       {isAuthenticated && myScripts.length > 0 && (
         <div className="mb-10">
           <h2 className="text-2xl font-bold mb-4">My Scripts</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {myScripts.map(script => {
               const meta = getScriptProgress(script);
               return (
@@ -371,7 +371,7 @@ export const ScriptLibrary: React.FC<ScriptLibraryProps> = ({ onScriptSelect }) 
       {/* Section: Demo Scripts */}
       <div className="mb-10">
         <h2 className="text-2xl font-bold mb-4">Demo Scripts</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {languageFilteredDemos.map(script => (
             <Card key={script.id} className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
               <CardHeader>
