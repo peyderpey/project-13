@@ -18,6 +18,8 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
@@ -25,39 +27,60 @@ export const useAuth = () => {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) throw error;
         
-        console.log('Initial session:', session?.user?.id);
-        setAuthState({
-          user: session?.user ?? null,
-          session,
-          loading: false,
-          error: null
-        });
+        if (isMounted) {
+          console.log('Initial session:', session?.user?.id);
+          setAuthState({
+            user: session?.user ?? null,
+            session,
+            loading: false,
+            error: null
+          });
+        }
       } catch (error) {
-        console.error('Auth error:', error);
-        setAuthState(prev => ({
-          ...prev,
-          loading: false,
-          error: error instanceof Error ? error.message : 'Authentication error'
-        }));
+        if (isMounted) {
+          console.error('Auth error:', error);
+          setAuthState(prev => ({
+            ...prev,
+            loading: false,
+            error: error instanceof Error ? error.message : 'Authentication error'
+          }));
+        }
       }
     };
 
     getInitialSession();
 
-    // Listen for auth changes
+    // Listen for auth changes with debouncing
+    let timeoutId: NodeJS.Timeout;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.id);
-        setAuthState({
-          user: session?.user ?? null,
-          session,
-          loading: false,
-          error: null
-        });
+        // Clear previous timeout
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        
+        // Debounce auth state changes to prevent excessive updates
+        timeoutId = setTimeout(() => {
+          if (isMounted) {
+            console.log('Auth state changed:', event, session?.user?.id);
+            setAuthState({
+              user: session?.user ?? null,
+              session,
+              loading: false,
+              error: null
+            });
+          }
+        }, 100); // 100ms debounce
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string) => {
@@ -69,7 +92,12 @@ export const useAuth = () => {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: window.location.origin,
+          data: {
+            role: 'user', // Default role for new users
+            is_demo_admin: false,
+            permissions: ['basic_scripts']
+          }
         }
       });
 

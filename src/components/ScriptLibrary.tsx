@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { SpeechSetup } from './SpeechSetup';
 
 interface ScriptLibraryProps {
   onScriptSelect: (characters: Character[], lines: ScriptLine[], title: string, language: string) => void;
@@ -28,7 +29,53 @@ export const ScriptLibrary: React.FC<ScriptLibraryProps> = ({ onScriptSelect }) 
   const { characterPerformance, getPerformanceRating } = useAppSettings();
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'checking'>('checking');
   const [hasInitialFetch, setHasInitialFetch] = useState(false);
-  const [debugMode, setDebugMode] = useState(false);
+  // Remove debug mode toggle and related UI
+  const { settings } = useAppSettings();
+  const deviceId = settings.deviceId;
+  const [showSpeechSetup, setShowSpeechSetup] = useState(false);
+  const [pendingScript, setPendingScript] = useState<any>(null);
+
+  // Helper to check if we should skip SpeechSetup
+  function shouldSkipSpeechSetup() {
+    if (!isAuthenticated) return false; // Always show for demo users
+    return localStorage.getItem(`skipSpeechSetup-${deviceId}`) === 'true';
+  }
+
+  // Handler for Rehearse button
+  const handleRehearse = (script: any) => {
+    if (shouldSkipSpeechSetup()) {
+      // Proceed directly
+      onScriptSelect(
+        script.characters,
+        script.lines,
+        script.title,
+        script.language || 'en'
+      );
+    } else {
+      setPendingScript(script);
+      setShowSpeechSetup(true);
+    }
+  };
+
+  // Handler for SpeechSetup continue
+  const handleSpeechSetupContinue = () => {
+    setShowSpeechSetup(false);
+    if (pendingScript) {
+      onScriptSelect(
+        pendingScript.characters,
+        pendingScript.lines,
+        pendingScript.title,
+        pendingScript.language || 'en'
+      );
+      setPendingScript(null);
+    }
+  };
+
+  // Handler for SpeechSetup cancel
+  const handleSpeechSetupCancel = () => {
+    setShowSpeechSetup(false);
+    setPendingScript(null);
+  };
 
   const demoScripts = getDemoScripts();
   const languageFilteredDemos = demoScripts.filter(script => 
@@ -225,195 +272,190 @@ export const ScriptLibrary: React.FC<ScriptLibraryProps> = ({ onScriptSelect }) 
   // }
 
   return (
-    <div className="relative max-w-6xl mx-auto pb-24">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold text-foreground mb-2">
-          {t('library.title')}
-        </h2>
-        <p className="text-muted-foreground">
-          {t('library.subtitle')}
-        </p>
-        
-        {/* Debug toggle for development */}
-        {process.env.NODE_ENV === 'development' && (
-          <Button
-            onClick={() => setDebugMode(!debugMode)}
-            variant="ghost"
-            size="sm"
-            className="mt-2 text-xs"
-          >
-            <Bug className="w-3 h-3 mr-1" />
-            Debug Mode: {debugMode ? 'ON' : 'OFF'}
-          </Button>
-        )}
-      </div>
-
-      {/* Connection Status */}
-      {connectionStatus !== 'connected' && (
-        <Alert className={`mb-6 ${
-          connectionStatus === 'disconnected' 
-            ? 'border-destructive bg-destructive/10 text-destructive'
-            : 'border-warning bg-warning/10 text-warning-foreground'
-        }`}>
-          {connectionStatus === 'disconnected' ? (
-            <WifiOff className="w-4 h-4" />
-          ) : (
-            <Wifi className="w-4 h-4 animate-pulse" />
-          )}
-          <AlertDescription className="flex items-center justify-between">
-            <span>
-              {connectionStatus === 'disconnected' 
-                ? 'Connection Error - Unable to connect to the database. Please check your internet connection.'
-                : 'Checking Connection...'
-              }
-            </span>
-            {connectionStatus === 'disconnected' && (
-              <Button
-                onClick={() => window.location.reload()}
-                variant="outline"
-                size="sm"
-                className="ml-4"
-              >
-                Retry
-              </Button>
-            )}
-          </AlertDescription>
-        </Alert>
+    <>
+      {showSpeechSetup && (
+        <SpeechSetup
+          isDemoUser={!isAuthenticated}
+          onContinue={handleSpeechSetupContinue}
+          onCancel={handleSpeechSetupCancel}
+        />
       )}
-
-      {/* Section: Continue Rehearsing */}
-      {inProgressScript && inProgressMeta && (
-        <div className="mb-10">
-          <div className="relative rounded-2xl bg-gradient-to-r from-primary to-accent shadow-xl border-2 border-primary p-6 flex items-center mb-4">
-            <PlayCircle className="w-10 h-10 text-white drop-shadow-lg mr-4" />
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-white drop-shadow">{t('library.continueRehearsing')}</h2>
-              <div className="text-white/80 mt-1 font-medium">{inProgressScript.title}</div>
-              {inProgressScript.author && (
-                <div className="text-white/60 text-sm">{inProgressScript.author}</div>
+      <div className="relative max-w-6xl mx-auto pb-24">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold text-foreground mb-2">
+            {t('library.title')}
+          </h2>
+          <p className="text-muted-foreground">
+            {t('library.subtitle')}
+          </p>
+          
+          {/* Connection Status */}
+          {connectionStatus !== 'connected' && (
+            <Alert className={`mb-6 ${
+              connectionStatus === 'disconnected' 
+                ? 'border-destructive bg-destructive/10 text-destructive'
+                : 'border-warning bg-warning/10 text-warning-foreground'
+            }`}>
+              {connectionStatus === 'disconnected' ? (
+                <WifiOff className="w-4 h-4" />
+              ) : (
+                <Wifi className="w-4 h-4 animate-pulse" />
               )}
-              <div className="flex items-center gap-6 mt-2">
-                <div className="text-sm text-white/80">{t('library.progress')}: {inProgressMeta.percent}%</div>
-                <div className="text-sm text-white/80">
-                  {t('library.quality')}: 
-                  {inProgressMeta.performance ? (
-                    <span className="ml-1">
-                      {getPerformanceRating(inProgressMeta.performance.averageAccuracy).rating} 
-                      {getPerformanceRating(inProgressMeta.performance.averageAccuracy).emoji}
-                    </span>
-                  ) : (
-                    <span className="italic ml-1">—</span>
-                  )}
-                </div>
-              </div>
-            </div>
-            <Button
-              className="ml-4 px-8 py-3 text-lg font-semibold shadow-lg bg-white text-primary hover:bg-accent hover:text-white transition animate-pulse"
-              onClick={() => handleScriptSelect(inProgressScript)}
-            >
-              {t('library.continue')}
-            </Button>
-          </div>
+              <AlertDescription className="flex items-center justify-between">
+                <span>
+                  {connectionStatus === 'disconnected' 
+                    ? 'Connection Error - Unable to connect to the database. Please check your internet connection.'
+                    : 'Checking Connection...'
+                  }
+                </span>
+                {connectionStatus === 'disconnected' && (
+                  <Button
+                    onClick={() => window.location.reload()}
+                    variant="outline"
+                    size="sm"
+                    className="ml-4"
+                  >
+                    Retry
+                  </Button>
+                )}
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
-      )}
 
-      {/* Section: My Scripts */}
-      {isAuthenticated && myScripts.length > 0 && (
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold mb-4">My Scripts</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myScripts.map(script => {
-              const meta = getScriptProgress(script);
-              return (
-                <Card key={script.id} className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-                  <CardHeader>
-                    <CardTitle>{script.title}</CardTitle>
-                    {script.author && <CardDescription>{script.author}</CardDescription>}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-sm text-muted-foreground">Progress: {meta.percent}%</div>
-                      <div className="text-sm text-muted-foreground">
-                        Quality: 
-                        {meta.performance ? (
-                          <span className="ml-1">
-                            {getPerformanceRating(meta.performance.averageAccuracy).rating} 
-                            {getPerformanceRating(meta.performance.averageAccuracy).emoji}
-                          </span>
-                        ) : (
-                          <span className="italic ml-1">—</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <Users className="w-4 h-4" />
-                        <span>{script.characters.length} {t('library.characters')}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <FileText className="w-4 h-4" />
-                        <span>{script.lines.length} {t('library.lines')}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button onClick={() => handleScriptSelect(script)} className="w-full">
-                      Rehearse
-                    </Button>
-                  </CardFooter>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Section: Demo Scripts */}
-      <div className="mb-10">
-        <h2 className="text-2xl font-bold mb-4">Demo Scripts</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {languageFilteredDemos.map(script => (
-            <Card key={script.id} className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-              <CardHeader>
-                <CardTitle>{script.title}</CardTitle>
-                <CardDescription>{script.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-1">
-                    <Users className="w-4 h-4" />
-                    <span>{script.characters.length} {t('library.characters')}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <FileText className="w-4 h-4" />
-                    <span>{script.lines.length} {t('library.lines')}</span>
-                  </div>
-                </div>
-                {script.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {script.tags.slice(0, 3).map(tag => (
-                      <Badge key={tag} variant="outline" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                    {script.tags.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{script.tags.length - 3}
-                      </Badge>
+        {/* Section: Continue Rehearsing */}
+        {inProgressScript && inProgressMeta && (
+          <div className="mb-10">
+            <div className="relative rounded-2xl bg-gradient-to-r from-primary to-accent shadow-xl border-2 border-primary p-6 flex items-center mb-4">
+              <PlayCircle className="w-10 h-10 text-white drop-shadow-lg mr-4" />
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-white drop-shadow">{t('library.continueRehearsing')}</h2>
+                <div className="text-white/80 mt-1 font-medium">{inProgressScript.title}</div>
+                {inProgressScript.author && (
+                  <div className="text-white/60 text-sm">{inProgressScript.author}</div>
+                )}
+                <div className="flex items-center gap-6 mt-2">
+                  <div className="text-sm text-white/80">{t('library.progress')}: {inProgressMeta.percent}%</div>
+                  <div className="text-sm text-white/80">
+                    {t('library.quality')}: 
+                    {inProgressMeta.performance ? (
+                      <span className="ml-1">
+                        {getPerformanceRating(inProgressMeta.performance.averageAccuracy).rating} 
+                        {getPerformanceRating(inProgressMeta.performance.averageAccuracy).emoji}
+                      </span>
+                    ) : (
+                      <span className="italic ml-1">—</span>
                     )}
                   </div>
-                )}
-              </CardContent>
-              <CardFooter>
-                <Button onClick={() => handleScriptSelect(script)} className="w-full">
-                  Rehearse
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                </div>
+              </div>
+              <Button
+                className="ml-4 px-8 py-3 text-lg font-semibold shadow-lg bg-white text-primary hover:bg-accent hover:text-white transition animate-pulse"
+                onClick={() => handleScriptSelect(inProgressScript)}
+              >
+                {t('library.continue')}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Section: My Scripts */}
+        {isAuthenticated && myScripts.length > 0 && (
+          <div className="mb-10">
+            <h2 className="text-2xl font-bold mb-4">My Scripts</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {myScripts.map(script => {
+                const meta = getScriptProgress(script);
+                return (
+                  <Card key={script.id} className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+                    <CardHeader>
+                      <CardTitle>{script.title}</CardTitle>
+                      {script.author && <CardDescription>{script.author}</CardDescription>}
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-sm text-muted-foreground">Progress: {meta.percent}%</div>
+                        <div className="text-sm text-muted-foreground">
+                          Quality: 
+                          {meta.performance ? (
+                            <span className="ml-1">
+                              {getPerformanceRating(meta.performance.averageAccuracy).rating} 
+                              {getPerformanceRating(meta.performance.averageAccuracy).emoji}
+                            </span>
+                          ) : (
+                            <span className="italic ml-1">—</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                        <div className="flex items-center space-x-1">
+                          <Users className="w-4 h-4" />
+                          <span>{script.characters.length} {t('library.characters')}</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <FileText className="w-4 h-4" />
+                          <span>{script.lines.length} {t('library.lines')}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                    <CardFooter>
+                      <Button onClick={() => handleRehearse(script)} className="w-full">
+                        Rehearse
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Section: Demo Scripts */}
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold mb-4">Demo Scripts</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {languageFilteredDemos.map(script => (
+              <Card key={script.id} className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
+                <CardHeader>
+                  <CardTitle>{script.title}</CardTitle>
+                  <CardDescription>{script.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-1">
+                      <Users className="w-4 h-4" />
+                      <span>{script.characters.length} {t('library.characters')}</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <FileText className="w-4 h-4" />
+                      <span>{script.lines.length} {t('library.lines')}</span>
+                    </div>
+                  </div>
+                  {script.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {script.tags.slice(0, 3).map(tag => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                      {script.tags.length > 3 && (
+                        <Badge variant="outline" className="text-xs">
+                          +{script.tags.length - 3}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={() => handleRehearse(script)} className="w-full">
+                    Rehearse
+                  </Button>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
-
-    </div>
+    </>
   );
 };

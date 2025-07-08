@@ -515,6 +515,10 @@ export const useScripts = () => {
 
       if (playsError) {
         console.error('useScripts: Supabase error:', playsError);
+        // If it's an RLS/policy error, show a more user-friendly message
+        if (playsError.message.includes('infinite recursion') || playsError.message.includes('policy')) {
+          throw new Error('Database configuration issue. Please try refreshing the page or contact support.');
+        }
         throw new Error(`Database error: ${playsError.message}`);
       }
 
@@ -607,15 +611,8 @@ export const useScripts = () => {
         firstFewLines: lines.slice(0, 3).map(l => `${l.character}: ${l.text.substring(0, 30)}...`)
       });
 
-      // Ensure user exists first
-      const { error: userError } = await supabase
-        .from('users')
-        .upsert({ id: userId }, { onConflict: 'id' });
-
-      if (userError) {
-        console.error('useScripts: User upsert error:', userError);
-        throw new Error(`User creation failed: ${userError.message}`);
-      }
+      // Note: User authentication is handled by Supabase auth.users
+      // No need to check/create user record - auth.users handles this automatically
 
       // Insert play
       const { data: play, error: playError } = await supabase
@@ -676,7 +673,8 @@ export const useScripts = () => {
           scene_number: scene.sceneNumber,
           scene_content: scene.content,
           setting: scene.setting,
-          act_number: scene.actNumber
+          act_number: scene.actNumber,
+          voice_settings: {}
         }));
 
         const { error: scenesError } = await supabase

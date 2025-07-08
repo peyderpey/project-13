@@ -9,7 +9,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Database types
+// Database types - removed users table since we're using auth.users
 export interface Database {
   public: {
     Tables: {
@@ -62,27 +62,30 @@ export interface Database {
           character_id: string;
           play_id: string;
           character_name: string;
-          genre: string | null;
+          gender: string | null; // Fixed: changed from 'genre' to 'gender'
           age_group: string | null;
           line_count: number;
+          voice_settings: any; // Added: voice_settings column
           created_at: string;
         };
         Insert: {
           character_id?: string;
           play_id: string;
           character_name: string;
-          genre?: string | null;
+          gender?: string | null; // Fixed: changed from 'genre' to 'gender'
           age_group?: string | null;
           line_count?: number;
+          voice_settings?: any; // Added: voice_settings column
           created_at?: string;
         };
         Update: {
           character_id?: string;
           play_id?: string;
           character_name?: string;
-          genre?: string | null;
+          gender?: string | null; // Fixed: changed from 'genre' to 'gender'
           age_group?: string | null;
           line_count?: number;
+          voice_settings?: any; // Added: voice_settings column
           created_at?: string;
         };
       };
@@ -94,6 +97,7 @@ export interface Database {
           scene_content: string | null;
           setting: string | null;
           act_number: number;
+          voice_settings: any;
           created_at: string;
         };
         Insert: {
@@ -103,6 +107,7 @@ export interface Database {
           scene_content?: string | null;
           setting?: string | null;
           act_number?: number;
+          voice_settings?: any;
           created_at?: string;
         };
         Update: {
@@ -112,6 +117,7 @@ export interface Database {
           scene_content?: string | null;
           setting?: string | null;
           act_number?: number;
+          voice_settings?: any;
           created_at?: string;
         };
       };
@@ -152,6 +158,29 @@ export interface Database {
           completed_lines?: number[];
           total_lines?: number;
           session_duration?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      user_settings: {
+        Row: {
+          id: string;
+          user_id: string;
+          settings: any;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          settings?: any;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          settings?: any;
           created_at?: string;
           updated_at?: string;
         };

@@ -21,7 +21,8 @@ const PracticeFooter = ({
   toggleAutoPause,
   t,
   speechRecognitionSupported,
-  SceneNavigatorComponent
+  SceneNavigatorComponent,
+  showNavigation
 }: {
   progress: number;
   completedLines: Set<number>;
@@ -39,6 +40,7 @@ const PracticeFooter = ({
   t: (key: string) => string;
   speechRecognitionSupported: boolean;
   SceneNavigatorComponent: React.FC;
+  showNavigation: boolean;
 }) => (
   <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-10 safe-area-pb shadow-lg">
     {!speechRecognitionSupported && (
@@ -52,28 +54,32 @@ const PracticeFooter = ({
       </div>
     )}
 
-    {/* Progress Section */}
-    <Card className="mx-3 mt-3 border-0 shadow-none">
-      <CardContent className="p-3">
-        {/* Progress Bar */}
-        <div className="bg-muted rounded-full h-2 mb-2">
-          <div 
-            className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-        {/* Progress Info */}
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>{completedLines.size} / {myLines.length} completed ({Math.round(progress)}%)</span>
-          <span>{currentGlobalLineIndex + 1} / {lines.length}</span>
-        </div>
-      </CardContent>
-    </Card>
+    {showNavigation && (
+      <>
+        {/* Progress Section */}
+        <Card className="mx-3 mt-3 border-0 shadow-none">
+          <CardContent className="p-3">
+            {/* Progress Bar */}
+            <div className="bg-muted rounded-full h-2 mb-2">
+              <div 
+                className="bg-gradient-to-r from-primary to-secondary h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            {/* Progress Info */}
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>{completedLines.size} / {myLines.length} completed ({Math.round(progress)}%)</span>
+              <span>{currentGlobalLineIndex + 1} / {lines.length}</span>
+            </div>
+          </CardContent>
+        </Card>
 
-    {/* Scene Navigator */}
-    <div className="border-t border-border">
-      <SceneNavigatorComponent />
-    </div>
+        {/* Scene Navigator */}
+        <div className="border-t border-border">
+          <SceneNavigatorComponent />
+        </div>
+      </>
+    )}
 
     {/* Auto-Resize Button Controls */}
     <div className="flex items-stretch gap-2 px-3 py-3 border-t border-border min-h-[48px]">
@@ -103,9 +109,10 @@ const PracticeFooter = ({
             ? "flex-1 min-w-[120px] h-12 bg-green-500 text-white"
             : "flex-shrink-0 w-16 h-12 bg-red-500 text-white"
         )}
+        title={practiceMode === 'auto' ? 'Manual Advance' : 'Auto Advance'}
       >
         <Bot className="w-6 h-6" />
-        {practiceMode === 'auto' && <span>Auto</span>}
+        {practiceMode === 'auto' && <span>Manual Advance</span>}
       </Button>
 
       {/* Start/Pause Button - Always show, icon only in manual mode */}

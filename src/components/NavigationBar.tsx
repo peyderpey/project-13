@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Home, BookOpen, Settings, LogOut, Theater, User, ChevronRight } from 'lucide-react';
+import { Home, BookOpen, Settings, LogOut, Theater, User, ChevronRight, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useTranslation } from '../i18n/useTranslation';
 import { useAppSettings } from '../hooks/useAppSettings';
@@ -49,6 +49,12 @@ export const NavigationBar: React.FC<NavigationBarProps> = ({
       view: 'practice', 
       label: t('practice.title'), 
       icon: <BookOpen className="w-5 h-5" />,
+      requiresAuth: true
+    },
+    { 
+      view: 'ai-voiceover', 
+      label: 'AI Voiceover', 
+      icon: <Sparkles className="w-5 h-5" />,
       requiresAuth: true
     },
     { 

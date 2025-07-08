@@ -1,0 +1,2 @@
+-- Skipped: Cannot add columns to auth.users in Supabase unless you are the database owner.
+-- All user roles and metadata should be managed in the user_permissions table instead. 

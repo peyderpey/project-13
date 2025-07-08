@@ -4,7 +4,12 @@ import { ScriptClassifier } from './scriptClassifier';
 
 export const parseScript = async (
   fileOrContent: File | string, 
-  title: string = 'Untitled Script'
+  title: string = 'Untitled Script',
+  options: {
+    includeStageDirections?: boolean;
+    strictMode?: boolean;
+    verboseLogging?: boolean;
+  } = {}
 ): Promise<{ 
   characters: Character[], 
   lines: ScriptLine[],
@@ -34,7 +39,7 @@ export const parseScript = async (
 
   // For Shakespeare and classic play formats, use the enhanced parser
   console.log('Using enhanced Shakespeare parser...');
-  return parseShakespeareScript(content, extractedTitle);
+  return parseShakespeareScript(content, extractedTitle, options);
 };
 
 const cleanScriptContent = (content: string): string => {
@@ -55,7 +60,11 @@ const cleanScriptContent = (content: string): string => {
   return content.trim();
 };
 
-const parseShakespeareScript = (content: string, title: string): { 
+const parseShakespeareScript = (content: string, title: string, options: {
+  includeStageDirections?: boolean;
+  strictMode?: boolean;
+  verboseLogging?: boolean;
+} = {}): { 
   characters: Character[], 
   lines: ScriptLine[],
   title: string 
@@ -127,9 +136,19 @@ const parseShakespeareScript = (content: string, title: string): {
       continue;
     }
     
-    // Skip stage directions in brackets or parentheses
+    // Handle stage directions based on options (default: always include)
     if (stageDirectionPattern.test(line)) {
-      console.log('Skipping stage direction:', line);
+      const includeStageDirections = options.includeStageDirections !== false; // Default to true
+      console.log(`Found stage direction: ${line} (${includeStageDirections ? 'including' : 'skipping'})`);
+      
+      if (includeStageDirections && currentCharacter) {
+        // Add stage direction as part of the current character's context
+        if (pendingDialogue) {
+          pendingDialogue += ' ' + line;
+        } else {
+          pendingDialogue = line;
+        }
+      }
       continue;
     }
     

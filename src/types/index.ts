@@ -76,6 +76,11 @@ export interface AppSettings {
   scriptHistory?: { [key: string]: ScriptCharacterHistory }; // scriptId key
   // Temporary flag for testing new practice session
   useNewPracticeSession?: boolean;
+  theme?: 'light' | 'dark' | 'system'; // Added theme property
+  // Display settings
+  hideLevel?: 'show-all' | 'hide-stage' | 'hide-character';
+  displayMode?: 'full' | 'minimal' | 'prompt';
+  practiceTemplate?: 'chat' | 'classic' | 'large-print' | 'teleprompter' | 'theatre';
 }
 
 // Script Language Information

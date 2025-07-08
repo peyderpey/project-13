@@ -3,8 +3,18 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { AppSettings, AccuracyLevel, VoiceSettings, UserProgress, CharacterPerformance, ScriptCharacterHistory } from '../types';
 import { Language, detectBrowserLanguage } from '../i18n';
+import { v4 as uuidv4 } from 'uuid';
 
 const LOCAL_KEY = 'rehearsify-settings';
+
+function getOrCreateDeviceId() {
+  let id = localStorage.getItem('rehearsify-deviceId') || '';
+  if (!id) {
+    id = uuidv4();
+    localStorage.setItem('rehearsify-deviceId', id);
+  }
+  return id;
+}
 
 const defaultSettings: AppSettings = {
   accuracyLevel: 'semantic',
@@ -12,7 +22,12 @@ const defaultSettings: AppSettings = {
   language: 'en',
   autoAdvance: true,
   autoRecordTimeout: 5,
-  deviceId: '',
+  deviceId: getOrCreateDeviceId(),
+  theme: 'system', // Add theme to default settings
+  // Add default display settings
+  hideLevel: 'show-all',
+  displayMode: 'full',
+  practiceTemplate: 'chat'
 };
 
 export function useAppSettings() {
@@ -22,7 +37,13 @@ export function useAppSettings() {
     const raw = localStorage.getItem(LOCAL_KEY);
     if (raw) {
       try {
-        return { ...defaultSettings, ...JSON.parse(raw) };
+        const loaded = JSON.parse(raw);
+        // Ensure all default values are present
+        const merged = { ...defaultSettings, ...loaded };
+        if (!merged.deviceId) {
+          merged.deviceId = getOrCreateDeviceId();
+        }
+        return merged;
       } catch {}
     }
     // Fallback to browser language
@@ -40,14 +61,28 @@ export function useAppSettings() {
           .eq('user_id', user.id)
           .single();
         if (data) {
-          setSettings((prev) => ({ ...prev, ...data.settings }));
-          localStorage.setItem(LOCAL_KEY, JSON.stringify({ ...settings, ...data.settings }));
+          setSettings((prev) => {
+            // Ensure all default values are present when merging from DB
+            const merged = { ...defaultSettings, ...prev, ...data.settings };
+            localStorage.setItem(LOCAL_KEY, JSON.stringify(merged));
+            return merged;
+          });
         } else if (error) {
-          // If no settings in DB, keep local
+          // If no settings in DB, create default record
+          const currentSettings = settings;
+          const { error: insertError } = await supabase
+            .from('user_settings')
+            .insert({
+              user_id: user.id,
+              settings: currentSettings
+            });
+          if (insertError) {
+            console.warn('Failed to create user settings:', insertError);
+          }
         }
       })();
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user]); // Removed settings dependency to prevent infinite loops
 
   // Helper to update rehearsal progress for a script/character
   const updateProgress = useCallback((scriptId: string, character: string, progressObj: UserProgress) => {

@@ -1,33 +1,21 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { Header } from './components/Header';
-import { SideMenu } from './components/SideMenu';
 import { ScriptUpload } from './components/ScriptUpload';
 import { ScriptLibrary } from './components/ScriptLibrary';
 import { CharacterSelection } from './components/CharacterSelection';
-import { PracticeSession } from './components/PracticeSession';
 import { PracticeSessionNew } from './components/PracticeSessionNew';
 import { StartingPointSelector } from './components/StartingPointSelector';
 import { Settings } from './components/Settings';
-import { Character, ScriptLine, AccuracyLevel, VoiceSettings, getScriptLanguageInfo, UserProgress } from './types';
-import { Language } from './i18n';
-import { useTranslation } from './i18n/useTranslation';
+import { AIVoiceover } from './components/AIVoiceover';
+import { Character, ScriptLine, VoiceSettings, getScriptLanguageInfo, UserProgress } from './types';
 import { useSpeechSynthesis } from './hooks/useSpeechSynthesis';
 import { useSpeechRecognition } from './hooks/useSpeechRecognition';
 import { useScripts } from './hooks/useScripts';
 import { useAppSettings } from './hooks/useAppSettings';
-import { Button } from './components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from './components/ui/card';
-import { ThemeToggle } from './components/ThemeToggle';
 
-type AppState = 'library' | 'upload' | 'character-selection' | 'starting-point' | 'practice';
-type PracticeMode = 'auto' | 'manual';
-
-function isLanguage(lang: string): lang is Language {
-  return ['en','tr','de','fr','es','it'].includes(lang);
-}
+type AppState = 'library' | 'upload' | 'character-selection' | 'starting-point' | 'practice' | 'ai-voiceover';
 
 function App() {
-  const { language: interfaceLanguage } = useTranslation();
   const { updateCharacterVoiceSettings } = useScripts();
   const [currentState, setCurrentState] = useState<AppState>('library');
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -36,12 +24,12 @@ function App() {
   const [scriptLanguage, setScriptLanguage] = useState('en'); // Original language of the script
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [showSideMenu, setShowSideMenu] = useState(false);
   const [showStartingPointSelector, setShowStartingPointSelector] = useState(false);
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [startingLineIndex, setStartingLineIndex] = useState(0);
   const { settings, updateSettings, updateCharacterPerformance, updateScriptHistory } = useAppSettings();
   const [practiceMode, setPracticeMode] = useState<'auto' | 'manual'>(settings.autoAdvance ? 'auto' : 'manual');
+  const [selectedTemplate, setSelectedTemplate] = useState(() => localStorage.getItem('practiceTemplate-default') || 'chat');
   
   // Speech hooks - centralized in App
   const { voices, speak, stop, isSpeaking } = useSpeechSynthesis();
@@ -86,8 +74,8 @@ function App() {
       return characters.map(char => ({
         ...char,
         voiceSettings: {
-          rate: 1.0,
-          volume: 1.0,
+          rate: settings.voiceSettings.rate,
+          volume: settings.voiceSettings.volume,
           voiceIndex: 0
         }
       }));
@@ -124,8 +112,8 @@ function App() {
         const globalVoiceIndex = voices.indexOf(selectedVoice);
         
         const newVoiceSettings = {
-          rate: character.voiceSettings?.rate || 1.0,
-          volume: character.voiceSettings?.volume || 1.0,
+          rate: settings.voiceSettings.rate,
+          volume: settings.voiceSettings.volume,
           voiceIndex: globalVoiceIndex >= 0 ? globalVoiceIndex : 0
         };
 
@@ -139,7 +127,7 @@ function App() {
     }
     
     return characters;
-  }, [voices]);
+  }, [voices, settings.voiceSettings]);
 
   // Memoized handlers to prevent recreation on every render
   const handleScriptLoaded = useCallback((
@@ -192,6 +180,10 @@ function App() {
       setUserProgress(null); // No saved progress found
     }
   }, [scriptTitle]);
+
+  const handleAIVoiceover = useCallback(() => {
+    setCurrentState('ai-voiceover');
+  }, []);
 
   const handleCharacterVoiceChange = useCallback(async (characterName: string, newVoiceSettings: VoiceSettings) => {
     console.log('🎵 Voice change for', characterName, ':', newVoiceSettings);
@@ -283,77 +275,26 @@ function App() {
     setStartingLineIndex(0);
   }, []);
 
-  const handleMenuClick = useCallback(() => setShowSideMenu(true), []);
-  const handleMenuClose = useCallback(() => setShowSideMenu(false), []);
-  const handleSettingsClick = useCallback(() => setShowSettings(true), []);
-  const handleSettingsClose = useCallback(() => setShowSettings(false), []);
   const handleStartingPointClose = useCallback(() => {
     setShowStartingPointSelector(false);
     // When closing scene selector, go back to character selection
     setCurrentState('character-selection');
   }, []);
 
-  // Get speech recognition language code from script language (not UI language)
-  const speechLanguage = scriptLanguageInfo.speechCode;
 
-  // Stable props object to prevent unnecessary re-renders
-  const practiceSessionProps = useMemo(() => ({
-    lines,
-    characters,
-    selectedCharacter: selectedCharacter!,
-    scriptTitle,
-    scriptLanguage,
-    accuracyLevel: settings.accuracyLevel,
-    voiceSettings: settings.voiceSettings,
-    language: speechLanguage,
-    autoRecordTimeout: settings.autoRecordTimeout,
-    startingLineIndex,
-    practiceMode: settings.autoAdvance ? 'auto' : 'manual',
-    onBack: handleBackToCharacterSelection,
-    onProgressUpdate: handleProgressUpdate,
-    // Speech synthesis props
-    voices,
-    speak,
-    stop,
-    isSpeaking,
-    // Speech recognition props
-    isListening,
-    transcript,
-    startListening,
-    stopListening,
-    resetTranscript,
-    speechRecognitionSupported,
-    isSpeechDetected // 🔥 ADD THIS - Pass speech detection state to PracticeSession
-  }), [
-    lines,
-    characters,
-    selectedCharacter,
-    scriptTitle,
-    scriptLanguage,
-    settings.accuracyLevel,
-    settings.voiceSettings,
-    speechLanguage,
-    settings.autoRecordTimeout,
-    startingLineIndex,
-    settings.autoAdvance,
-    handleBackToCharacterSelection,
-    handleProgressUpdate,
-    voices,
-    speak,
-    stop,
-    isSpeaking,
-    isListening,
-    transcript,
-    startListening,
-    stopListening,
-    resetTranscript,
-    speechRecognitionSupported,
-    isSpeechDetected // 🔥 ADD THIS - Include in dependency array
-  ]);
+
+
 
   return (
     <div className="min-h-screen bg-background">
-      <Header onMenuClick={handleMenuClick} />
+      <Header
+        settings={settings}
+        updateSettings={updateSettings}
+        showSettings={showSettings}
+        setShowSettings={setShowSettings}
+        selectedTemplate={selectedTemplate}
+        setSelectedTemplate={setSelectedTemplate}
+      />
       
       <main className="container mx-auto px-4 py-8">
         {currentState === 'library' && (
@@ -405,6 +346,7 @@ function App() {
               onCharacterSelect={handleCharacterSelected}
               onCharacterVoiceChange={handleCharacterVoiceChange}
               onContinue={handleStartPractice}
+              onAIVoiceover={handleAIVoiceover}
               voices={voices}
               currentState={currentState}
             />
@@ -412,76 +354,61 @@ function App() {
         )}
         
         {currentState === 'practice' && selectedCharacter && (
-          settings.useNewPracticeSession ? (
-            <PracticeSessionNew
-              lines={lines}
-              characters={characters}
-              selectedCharacter={selectedCharacter}
+          <PracticeSessionNew
+            lines={lines}
+            characters={characters}
+            selectedCharacter={selectedCharacter}
+            scriptTitle={scriptTitle}
+            accuracyLevel={settings.accuracyLevel}
+            voiceSettings={settings.voiceSettings}
+            language={scriptLanguage}
+            autoRecordTimeout={settings.autoRecordTimeout}
+            startingLineIndex={startingLineIndex}
+            practiceMode={practiceMode}
+            setPracticeMode={setPracticeMode}
+            template={selectedTemplate as 'chat' | 'classic' | 'large-print' | 'teleprompter' | 'theatre'}
+            onSceneComplete={() => {
+              handleBackToCharacterSelection();
+            }}
+            onGoToPreviousScene={() => {
+              handleBackToCharacterSelection();
+            }}
+            onBack={handleBackToCharacterSelection}
+            onProgressUpdate={handleProgressUpdate}
+            speak={speak}
+            stop={stop}
+            isSpeaking={isSpeaking}
+            isListening={isListening}
+            transcript={transcript}
+            startListening={startListening}
+            stopListening={stopListening}
+            resetTranscript={resetTranscript}
+            speechRecognitionSupported={speechRecognitionSupported}
+            isSpeechDetected={isSpeechDetected}
+          />
+        )}
+
+        {currentState === 'ai-voiceover' && (
+          <div>
+            <div className="mb-6">
+              <button
+                onClick={handleBackToLibrary}
+                className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm"
+              >
+                ← Back to Library
+              </button>
+            </div>
+            <AIVoiceover 
+              scriptId="current-script"
               scriptTitle={scriptTitle}
-              accuracyLevel={settings.accuracyLevel}
-              voiceSettings={settings.voiceSettings}
-              language={scriptLanguage}
-              autoRecordTimeout={settings.autoRecordTimeout}
-              startingLineIndex={startingLineIndex}
-              practiceMode={practiceMode}
-              setPracticeMode={setPracticeMode}
-              onSceneComplete={() => {
-                handleBackToCharacterSelection();
-              }}
-              onGoToPreviousScene={() => {
-                handleBackToCharacterSelection();
-              }}
-              onBack={handleBackToCharacterSelection}
-              onProgressUpdate={handleProgressUpdate}
-              speak={speak}
-              stop={stop}
-              isSpeaking={isSpeaking}
-              isListening={isListening}
-              transcript={transcript}
-              startListening={startListening}
-              stopListening={stopListening}
-              resetTranscript={resetTranscript}
-              speechRecognitionSupported={speechRecognitionSupported}
-              isSpeechDetected={isSpeechDetected}
-            />
-          ) : (
-            <PracticeSession
-              lines={lines}
               characters={characters}
-              selectedCharacter={selectedCharacter}
-              scriptTitle={scriptTitle}
-              accuracyLevel={settings.accuracyLevel}
-              voiceSettings={settings.voiceSettings}
-              language={scriptLanguage}
-              autoRecordTimeout={settings.autoRecordTimeout}
-              startingLineIndex={startingLineIndex}
-              practiceMode={settings.autoAdvance ? 'auto' : 'manual'}
-              onBack={handleBackToCharacterSelection}
-              onProgressUpdate={handleProgressUpdate}
-              speak={speak}
-              stop={stop}
-              isSpeaking={isSpeaking}
-              isListening={isListening}
-              transcript={transcript}
-              startListening={startListening}
-              stopListening={stopListening}
-              resetTranscript={resetTranscript}
-              speechRecognitionSupported={speechRecognitionSupported}
-              isSpeechDetected={isSpeechDetected}
+              lines={lines}
+              scriptLanguage={scriptLanguage}
+              onClose={handleBackToLibrary}
             />
-          )
+          </div>
         )}
       </main>
-
-      {/* Side Menu */}
-      <SideMenu
-        isOpen={showSideMenu}
-        onClose={handleMenuClose}
-        onSettingsClick={handleSettingsClick}
-        onBackToLibrary={handleBackToLibrary}
-        onExitSession={handleBackToCharacterSelection}
-        currentView={currentState}
-      />
 
       {/* Starting Point Selector Modal - Now Always Shown After Character Selection */}
       <StartingPointSelector
@@ -496,7 +423,7 @@ function App() {
 
       <Settings
         isOpen={showSettings}
-        onClose={handleSettingsClose}
+        onClose={() => setShowSettings(false)}
         accuracyLevel={settings.accuracyLevel}
         onAccuracyLevelChange={level => updateSettings({ accuracyLevel: level })}
         voiceSettings={settings.voiceSettings}
@@ -508,6 +435,10 @@ function App() {
         language={settings.language}
         useNewPracticeSession={settings.useNewPracticeSession}
         onUseNewPracticeSessionChange={use => updateSettings({ useNewPracticeSession: use })}
+        onPracticeTemplateChange={template => {
+          setSelectedTemplate(template);
+          localStorage.setItem('practiceTemplate-default', template);
+        }}
       />
     </div>
   );

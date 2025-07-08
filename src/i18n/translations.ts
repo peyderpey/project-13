@@ -27,6 +27,34 @@ export interface Translations {
     success: string;
     completed: string;
     or: string;
+    warning: string;
+    info: string;
+    confirm: string;
+    delete: string;
+    edit: string;
+    add: string;
+    search: string;
+    filter: string;
+    sort: string;
+    refresh: string;
+    forward: string;
+    home: string;
+    menu: string;
+    help: string;
+    about: string;
+    contact: string;
+    privacy: string;
+    terms: string;
+    language: string;
+    theme: string;
+    light: string;
+    dark: string;
+    system: string;
+    auto: string;
+    manual: string;
+    automatic: string;
+    manual_advance: string;
+    auto_advance: string;
   };
   
   // Authentication
@@ -222,6 +250,14 @@ export interface Translations {
     minutes: string;
     hours: string;
   };
+
+  // Drawer menu
+  drawer: {
+    title: string;
+    description: string;
+  };
+
+
 }
 
 const translations: Record<Language, Translations> = {
@@ -425,6 +461,13 @@ const translations: Record<Language, Translations> = {
       seconds: 'seconds',
       minutes: 'minutes',
       hours: 'hours'
+    },
+,
+
+    // Drawer menu
+    drawer: {
+      title: 'Menu & Settings',
+      description: 'Choose an action or adjust your settings.'
     }
   },
   
@@ -628,6 +671,55 @@ const translations: Record<Language, Translations> = {
       seconds: 'saniye',
       minutes: 'dakika',
       hours: 'saat'
+    },
+    common: {
+      settings: 'Ayarlar',
+      previous: 'Önceki',
+      next: 'Sonraki',
+      start: 'Başlat',
+      pause: 'Duraklat',
+      stop: 'Durdur',
+      close: 'Kapat',
+      save: 'Kaydet',
+      cancel: 'İptal',
+      loading: 'Yükleniyor...',
+      error: 'Hata',
+      success: 'Başarılı',
+      warning: 'Uyarı',
+      info: 'Bilgi',
+      confirm: 'Onayla',
+      delete: 'Sil',
+      edit: 'Düzenle',
+      add: 'Ekle',
+      search: 'Ara',
+      filter: 'Filtrele',
+      sort: 'Sırala',
+      refresh: 'Yenile',
+      back: 'Geri',
+      forward: 'İleri',
+      home: 'Ana Sayfa',
+      menu: 'Menü',
+      help: 'Yardım',
+      about: 'Hakkımızda',
+      contact: 'İletişim',
+      privacy: 'Gizlilik',
+      terms: 'Kullanım Koşulları',
+      language: 'Dil',
+      theme: 'Tema',
+      light: 'Aydınlık',
+      dark: 'Koyu',
+      system: 'Sistem',
+      auto: 'Otomatik',
+      manual: 'Manuel',
+      automatic: 'Otomatik',
+      manual_advance: 'Manuel İlerleme',
+      auto_advance: 'Otomatik İlerleme'
+    },
+
+    // Drawer menu
+    drawer: {
+      title: 'Menü & Ayarlar',
+      description: 'Bir işlem seçin veya ayarlarınızı ayarlayın.'
     }
   },
   
@@ -831,6 +923,55 @@ const translations: Record<Language, Translations> = {
       seconds: 'Sekunden',
       minutes: 'Minuten',
       hours: 'Stunden'
+    },
+    common: {
+      settings: 'Einstellungen',
+      previous: 'Vorherige',
+      next: 'Weiter',
+      start: 'Start',
+      pause: 'Pause',
+      stop: 'Stopp',
+      close: 'Schließen',
+      save: 'Speichern',
+      cancel: 'Abbrechen',
+      loading: 'Laden...',
+      error: 'Fehler',
+      success: 'Erfolg',
+      warning: 'Warnung',
+      info: 'Information',
+      confirm: 'Bestätigen',
+      delete: 'Löschen',
+      edit: 'Bearbeiten',
+      add: 'Hinzufügen',
+      search: 'Suchen',
+      filter: 'Filtern',
+      sort: 'Sortieren',
+      refresh: 'Aktualisieren',
+      back: 'Zurück',
+      forward: 'Vorwärts',
+      home: 'Startseite',
+      menu: 'Menü',
+      help: 'Hilfe',
+      about: 'Über',
+      contact: 'Kontakt',
+      privacy: 'Datenschutz',
+      terms: 'Nutzungsbedingungen',
+      language: 'Sprache',
+      theme: 'Thema',
+      light: 'Hell',
+      dark: 'Dunkel',
+      system: 'System',
+      auto: 'Automatisch',
+      manual: 'Manuelle',
+      automatic: 'Automatisch',
+      manual_advance: 'Manuelle Fortsetzung',
+      auto_advance: 'Automatische Fortsetzung'
+    },
+
+    // Drawer menu
+    drawer: {
+      title: 'Menü & Einstellungen',
+      description: 'Wählen Sie eine Aktion aus oder passen Sie Ihre Einstellungen an.'
     }
   },
   
@@ -1034,6 +1175,55 @@ const translations: Record<Language, Translations> = {
       seconds: 'secondes',
       minutes: 'minutes',
       hours: 'heures'
+    },
+    common: {
+      settings: 'Paramètres',
+      previous: 'Précédent',
+      next: 'Suivant',
+      start: 'Commencer',
+      pause: 'Duraklat',
+      stop: 'Durdur',
+      close: 'Fermer',
+      save: 'Sauvegarder',
+      cancel: 'Annuler',
+      loading: 'Chargement...',
+      error: 'Erreur',
+      success: 'Succès',
+      warning: 'Avertissement',
+      info: 'Information',
+      confirm: 'Confirmer',
+      delete: 'Supprimer',
+      edit: 'Modifier',
+      add: 'Ajouter',
+      search: 'Rechercher',
+      filter: 'Filtrer',
+      sort: 'Trier',
+      refresh: 'Actualiser',
+      back: 'Retour',
+      forward: 'Avant',
+      home: 'Accueil',
+      menu: 'Menu',
+      help: 'Aide',
+      about: 'À propos',
+      contact: 'Contact',
+      privacy: 'Confidentialité',
+      terms: 'Conditions d\'utilisation',
+      language: 'Langue',
+      theme: 'Thème',
+      light: 'Clair',
+      dark: 'Sombre',
+      system: 'Système',
+      auto: 'Automatique',
+      manual: 'Manuel',
+      automatic: 'Automatique',
+      manual_advance: 'Avancement Manuel',
+      auto_advance: 'Avancement Automatique'
+    },
+
+    // Drawer menu
+    drawer: {
+      title: 'Menu & Paramètres',
+      description: 'Choisissez une action ou ajustez vos paramètres.'
     }
   },
   
@@ -1237,6 +1427,55 @@ const translations: Record<Language, Translations> = {
       seconds: 'segundos',
       minutes: 'minutos',
       hours: 'horas'
+    },
+    common: {
+      settings: 'Configuración',
+      previous: 'Anterior',
+      next: 'Siguiente',
+      start: 'Iniciar',
+      pause: 'Pausar',
+      stop: 'Detener',
+      close: 'Cerrar',
+      save: 'Guardar',
+      cancel: 'Cancelar',
+      loading: 'Cargando...',
+      error: 'Error',
+      success: 'Éxito',
+      warning: 'Advertencia',
+      info: 'Información',
+      confirm: 'Confirmar',
+      delete: 'Eliminar',
+      edit: 'Editar',
+      add: 'Agregar',
+      search: 'Buscar',
+      filter: 'Filtrar',
+      sort: 'Ordenar',
+      refresh: 'Actualizar',
+      back: 'Atrás',
+      forward: 'Adelante',
+      home: 'Inicio',
+      menu: 'Menú',
+      help: 'Ayuda',
+      about: 'Acerca de',
+      contact: 'Contacto',
+      privacy: 'Privacidad',
+      terms: 'Términos de uso',
+      language: 'Idioma',
+      theme: 'Tema',
+      light: 'Claro',
+      dark: 'Oscuro',
+      system: 'Sistema',
+      auto: 'Automático',
+      manual: 'Manual',
+      automatic: 'Automático',
+      manual_advance: 'Avance Manual',
+      auto_advance: 'Avance Automático'
+    },
+
+    // Drawer menu
+    drawer: {
+      title: 'Menú & Configuración',
+      description: 'Elige una acción o ajusta tus configuraciones.'
     }
   },
   
@@ -1440,6 +1679,55 @@ const translations: Record<Language, Translations> = {
       seconds: 'secondi',
       minutes: 'minuti',
       hours: 'ore'
+    },
+    common: {
+      settings: 'Impostazioni',
+      previous: 'Precedente',
+      next: 'Avanti',
+      start: 'Inizia',
+      pause: 'Pausa',
+      stop: 'Ferma',
+      close: 'Chiudi',
+      save: 'Salva',
+      cancel: 'Annulla',
+      loading: 'Caricamento...',
+      error: 'Errore',
+      success: 'Successo',
+      warning: 'Avertimento',
+      info: 'Informazione',
+      confirm: 'Conferma',
+      delete: 'Elimina',
+      edit: 'Modifica',
+      add: 'Aggiungi',
+      search: 'Cerca',
+      filter: 'Filtra',
+      sort: 'Ordina',
+      refresh: 'Aggiorna',
+      back: 'Indietro',
+      forward: 'Avanti',
+      home: 'Home',
+      menu: 'Menu',
+      help: 'Aiuto',
+      about: 'Informazioni',
+      contact: 'Contatto',
+      privacy: 'Privacy',
+      terms: 'Termini',
+      language: 'Lingua',
+      theme: 'Tema',
+      light: 'Chiaro',
+      dark: 'Scuro',
+      system: 'Sistema',
+      auto: 'Automatico',
+      manual: 'Manuale',
+      automatic: 'Automatico',
+      manual_advance: 'Avance Manuale',
+      auto_advance: 'Avance Automatico'
+    },
+
+    // Drawer menu
+    drawer: {
+      title: 'Menu & Impostazioni',
+      description: 'Scegli un\'azione o regola le tue impostazioni.'
     }
   }
 };

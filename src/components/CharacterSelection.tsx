@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Users, Volume2 } from 'lucide-react';
+import { Users, Volume2, Sparkles, Crown } from 'lucide-react';
 import { Character, VoiceSettings, getScriptLanguageInfo } from '../types';
 import { useTranslation } from '../i18n/useTranslation';
 import { useAppSettings } from '../hooks/useAppSettings';
@@ -18,6 +18,7 @@ interface CharacterSelectionProps {
   onCharacterSelect: (character: string) => void;
   onCharacterVoiceChange: (characterName: string, voiceSettings: VoiceSettings) => void;
   onContinue: () => void;
+  onAIVoiceover?: () => void;
   voices: SpeechSynthesisVoice[];
   currentState: 'library' | 'upload' | 'character-selection' | 'starting-point' | 'practice';
 }
@@ -30,11 +31,12 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
   onCharacterSelect,
   onCharacterVoiceChange,
   onContinue,
+  onAIVoiceover,
   voices,
   currentState
 }) => {
   const { t, tp } = useTranslation();
-  const { scriptHistory } = useAppSettings();
+  const { scriptHistory, settings } = useAppSettings();
   const scriptLangInfo = getScriptLanguageInfo(scriptLanguage);
 
   // Sort characters with previous character first, then alphabetically
@@ -92,8 +94,8 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
     if (character.voiceSettings && voices[character.voiceSettings.voiceIndex]) {
       const utterance = new SpeechSynthesisUtterance(`Hello, I am ${character.name}`);
       utterance.voice = voices[character.voiceSettings.voiceIndex];
-      utterance.rate = character.voiceSettings.rate;
-      utterance.volume = character.voiceSettings.volume;
+      utterance.rate = settings.voiceSettings.rate;
+      utterance.volume = settings.voiceSettings.volume;
       speechSynthesis.speak(utterance);
     }
   };
@@ -215,6 +217,29 @@ export const CharacterSelection: React.FC<CharacterSelectionProps> = ({
           </Card>
         ))}
       </div>
+
+      {/* AI Voiceover Section - Only for Premium Users */}
+      {onAIVoiceover && (
+        <div className="mt-8 p-6 border-2 border-dashed border-purple-200 rounded-lg bg-gradient-to-r from-purple-50 to-blue-50">
+          <div className="text-center space-y-4">
+            <div className="flex items-center justify-center gap-2">
+              <Sparkles className="h-6 w-6 text-purple-600" />
+              <h3 className="text-lg font-semibold text-purple-900">AI Voiceover Generation</h3>
+              <Crown className="h-4 w-4 text-yellow-500" />
+            </div>
+            <p className="text-sm text-purple-700 max-w-md mx-auto">
+              Generate professional AI voiceovers for all characters using Google Cloud TTS and Gemini AI analysis.
+            </p>
+            <Button
+              onClick={onAIVoiceover}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              Generate AI Voiceover
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

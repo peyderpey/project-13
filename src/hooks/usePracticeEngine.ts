@@ -115,6 +115,9 @@ export function usePracticeEngine(props: UsePracticeEngineProps) {
   const isMountedRef = useRef(true);
   const wasSpeakingRef = useRef(false);
 
+  // Track if we just resumed from pause
+  const [justResumed, setJustResumed] = useState(false);
+
   // Helper functions
   const addTimeout = useCallback((timeoutId: NodeJS.Timeout) => {
     timeoutIdsRef.current.push(timeoutId);
@@ -260,12 +263,11 @@ export function usePracticeEngine(props: UsePracticeEngineProps) {
     const isMyLine = currentLine.character === propsRef.current.selectedCharacter;
 
     // Only process partner lines here - user lines are handled by separate effect
-    if (!isMyLine) {
-      console.log(`🎬 Processing partner line ${state.currentLineIndex + 1}: ${currentLine.character} - "${currentLine.text.substring(0, 50)}..."`);
-      
+    if (!isMyLine && (justResumed || !wasSpeakingRef.current)) {
+      // On resume or initial entry, re-initiate TTS for partner line
+      console.log(`🎬 (Resume) Processing partner line ${state.currentLineIndex + 1}: ${currentLine.character} - "${currentLine.text.substring(0, 50)}..."`);
       clearAllTimeouts();
       propsRef.current.resetTranscript();
-
       // Partner's line - start TTS
       console.log('🗣️ Partner line - starting TTS');
       const characterVoiceSettings = getCharacterVoiceSettings(currentLine.character);
@@ -274,8 +276,9 @@ export function usePracticeEngine(props: UsePracticeEngineProps) {
         propsRef.current.speak(currentLine.text, characterVoiceSettings, propsRef.current.language);
       }, 200);
       addTimeout(ttsTimeout);
+      setJustResumed(false);
     }
-  }, [state.currentLineIndex, state.isPlaying, state.isAutoMode, clearAllTimeouts, addTimeout, getCharacterVoiceSettings]);
+  }, [state.currentLineIndex, state.isPlaying, state.isAutoMode, clearAllTimeouts, addTimeout, getCharacterVoiceSettings, justResumed]);
 
   // Separate effect for user lines - follows the working pattern exactly
   useEffect(() => {
@@ -285,7 +288,7 @@ export function usePracticeEngine(props: UsePracticeEngineProps) {
     const isMyLine = currentLine.character === propsRef.current.selectedCharacter;
 
     // Only run this logic when it's the user's turn to speak and we're in auto mode and not paused
-    if (isMyLine && state.isAutoMode && state.isPlaying && !state.isWaitingForUser && !state.showingResult && propsRef.current.speechRecognitionSupported) {
+    if (isMyLine && state.isAutoMode && state.isPlaying && !state.isWaitingForUser && !state.showingResult && propsRef.current.speechRecognitionSupported && (justResumed || !wasSpeakingRef.current)) {
       console.log('🎭 User line detected - setting up actor-friendly speech recognition');
       
       // 1. Clear any lingering timeout from a previous turn
@@ -340,6 +343,7 @@ export function usePracticeEngine(props: UsePracticeEngineProps) {
         
         userTimeoutRef.current = null;
       }, propsRef.current.autoRecordTimeout * 1000);
+      setJustResumed(false);
     }
 
     // Cleanup function that runs when the component re-renders or the line changes
@@ -353,7 +357,7 @@ export function usePracticeEngine(props: UsePracticeEngineProps) {
         countdownIntervalRef.current = null;
       }
     };
-  }, [state.currentLineIndex, state.isAutoMode, state.isPlaying, state.showingResult]); // Removed isWaitingForUser from deps
+  }, [state.currentLineIndex, state.isAutoMode, state.isPlaying, state.showingResult, justResumed]); // Removed isWaitingForUser from deps
 
   // TTS completion effect - simple and reliable like the working component
   useEffect(() => {
@@ -528,10 +532,27 @@ export function usePracticeEngine(props: UsePracticeEngineProps) {
 
   // Action creators for the UI
   const actions = {
-    startAutoMode: () => setState(prev => ({ ...prev, isPlaying: true })),
+    startAutoMode: () => setState(prev => ({
+      ...prev,
+      isPlaying: true,
+      isWaitingForUser: false,
+      showingResult: false,
+      resultAccuracy: null,
+      timeoutCountdown: 0
+    })),
     stopAutoMode: () => setState(prev => ({ ...prev, isPlaying: false })),
     pause: () => setState(prev => ({ ...prev, isPlaying: false })),
-    resume: () => setState(prev => ({ ...prev, isPlaying: true })),
+    resume: () => {
+      setState(prev => ({
+        ...prev,
+        isPlaying: true,
+        isWaitingForUser: false,
+        showingResult: false,
+        resultAccuracy: null,
+        timeoutCountdown: 0
+      }));
+      setJustResumed(true);
+    },
     nextLine: () => {
       const nextIndex = state.currentLineIndex + 1;
       if (nextIndex < state.linesLength) {
@@ -583,7 +604,8 @@ export function usePracticeEngine(props: UsePracticeEngineProps) {
           isWaitingForUser: false,
           showingResult: false,
           resultAccuracy: null,
-          timeoutCountdown: 0
+          timeoutCountdown: 0,
+          isPlaying: true // Always start playing after jump
         }));
       }
     },
