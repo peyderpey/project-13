@@ -1,6 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
 import { Header } from './components/Header';
-import { ScriptUpload } from './components/ScriptUpload';
 import { ScriptLibrary } from './components/ScriptLibrary';
 import { CharacterSelection } from './components/CharacterSelection';
 import { PracticeSessionNew } from './components/PracticeSessionNew';
@@ -13,7 +12,7 @@ import { useSpeechRecognition } from './hooks/useSpeechRecognition';
 import { useScripts } from './hooks/useScripts';
 import { useAppSettings } from './hooks/useAppSettings';
 
-type AppState = 'library' | 'upload' | 'character-selection' | 'starting-point' | 'practice' | 'ai-voiceover';
+type AppState = 'library' | 'character-selection' | 'starting-point' | 'practice' | 'ai-voiceover';
 
 function App() {
   const { updateCharacterVoiceSettings } = useScripts();
@@ -21,7 +20,7 @@ function App() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [lines, setLines] = useState<ScriptLine[]>([]);
   const [scriptTitle, setScriptTitle] = useState('');
-  const [scriptLanguage, setScriptLanguage] = useState('en'); // Original language of the script
+  const [scriptLanguage, setScriptLanguage] = useState('en');
   const [selectedCharacter, setSelectedCharacter] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showStartingPointSelector, setShowStartingPointSelector] = useState(false);
@@ -31,10 +30,8 @@ function App() {
   const [practiceMode, setPracticeMode] = useState<'auto' | 'manual'>(settings.autoAdvance ? 'auto' : 'manual');
   const [selectedTemplate, setSelectedTemplate] = useState(() => localStorage.getItem('practiceTemplate-default') || 'chat');
   
-  // Speech hooks - centralized in App
   const { voices, speak, stop, isSpeaking } = useSpeechSynthesis();
   
-  // Memoize script language info to prevent recreating objects
   const scriptLanguageInfo = useMemo(() => getScriptLanguageInfo(scriptLanguage), [scriptLanguage]);
   
   const {
@@ -44,33 +41,22 @@ function App() {
     stopListening,
     resetTranscript,
     isSupported: speechRecognitionSupported,
-    isSpeechDetected // 🔥 ADD THIS - Now exposing speech detection state
+    isSpeechDetected
   } = useSpeechRecognition(scriptLanguageInfo.speechCode);
 
-  // 🔥 ENHANCED: Force language-specific voices for each character
   const shuffleVoicesForCharacters = useCallback((
     characters: Character[], 
     scriptLanguage: string
   ): Character[] => {
     const scriptLangInfo = getScriptLanguageInfo(scriptLanguage);
     
-    // Get voices that match the script language
     const availableVoices = voices.filter(voice => {
       const langPrefix = scriptLangInfo.speechCode.split('-')[0].toLowerCase();
       const voiceLangPrefix = voice.lang.split('-')[0].toLowerCase();
       return voiceLangPrefix === langPrefix;
     });
     
-    console.log('🎲 Voice shuffling:', {
-      scriptLanguage,
-      speechCode: scriptLangInfo.speechCode,
-      totalVoices: voices.length,
-      matchingVoices: availableVoices.length,
-      charactersCount: characters.length
-    });
-    
     if (availableVoices.length === 0) {
-      console.warn(`⚠️ No matching voices found for language '${scriptLanguage}', using default voices`);
       return characters.map(char => ({
         ...char,
         voiceSettings: {
@@ -81,32 +67,14 @@ function App() {
       }));
     }
 
-    // ✅ CRITICAL FIX: Get all current voice indices 
     const existingVoiceIndices = characters
       .map(c => c.voiceSettings?.voiceIndex)
       .filter(idx => idx !== undefined);
     
-    // Check if all characters have the same voice
     const allHaveSameVoice = existingVoiceIndices.length > 1 && 
                            existingVoiceIndices.every(idx => idx === existingVoiceIndices[0]);
     
-    console.log('🎲 Voice language check:', {
-      scriptLang: scriptLanguage,
-      voiceLanguageMatches: availableVoices.length > 0,
-      needsShuffling: !allHaveSameVoice,
-      allHaveSameVoice,
-      existingVoiceIndices: existingVoiceIndices.map(idx => 
-        idx !== undefined && idx >= 0 && idx < voices.length 
-          ? `${voices[idx].name} (${voices[idx].lang})`
-          : 'invalid index'
-      )
-    });
-    
-    // If all characters already have different voices, don't shuffle
     if (!allHaveSameVoice && availableVoices.length > 0) {
-      console.log('🔄 Reassigning voices for', scriptLanguage, 'script');
-      
-      // Assign different voices to characters
       return characters.map((character, index) => {
         const selectedVoice = availableVoices[index % availableVoices.length];
         const globalVoiceIndex = voices.indexOf(selectedVoice);
@@ -116,8 +84,6 @@ function App() {
           volume: settings.voiceSettings.volume,
           voiceIndex: globalVoiceIndex >= 0 ? globalVoiceIndex : 0
         };
-
-        console.log(`🎭 ${character.name} -> ${selectedVoice?.name || 'Default'} (${selectedVoice?.lang || 'unknown'})`);
 
         return {
           ...character,
@@ -129,21 +95,12 @@ function App() {
     return characters;
   }, [voices, settings.voiceSettings]);
 
-  // Memoized handlers to prevent recreation on every render
   const handleScriptLoaded = useCallback((
     loadedCharacters: Character[], 
     loadedLines: ScriptLine[], 
     title: string, 
     originalLanguage: string = 'en'
   ) => {
-    console.log('📚 Script loaded:', {
-      title,
-      originalLanguage,
-      charactersCount: loadedCharacters.length,
-      linesCount: loadedLines.length
-    });
-
-    // ✅ CRITICAL FIX: Apply smart voice shuffling for proper language matching
     const charactersWithVoices = shuffleVoicesForCharacters(loadedCharacters, originalLanguage);
 
     setCharacters(charactersWithVoices);
@@ -152,7 +109,6 @@ function App() {
     setScriptLanguage(originalLanguage);
     setCurrentState('character-selection');
     
-    // Reset progress and starting line
     setUserProgress(null);
     setStartingLineIndex(0);
   }, [shuffleVoicesForCharacters]);
@@ -160,24 +116,22 @@ function App() {
   const handleCharacterSelected = useCallback((character: string) => {
     setSelectedCharacter(character);
     
-    // Load progress from localStorage and set it in the state ONCE before the session starts
     const progressKey = `${scriptTitle}-${character}`;
     const savedProgress = localStorage.getItem(progressKey);
     
     if (savedProgress) {
       try {
         const progress: UserProgress = JSON.parse(savedProgress);
-        // Convert completedLines array back to array (keep as array, not Set)
         if (!Array.isArray(progress.completedLines)) {
           progress.completedLines = [];
         }
         setUserProgress(progress);
       } catch (error) {
         console.error('Failed to parse saved progress:', error);
-        setUserProgress(null); // Reset if parsing fails
+        setUserProgress(null);
       }
     } else {
-      setUserProgress(null); // No saved progress found
+      setUserProgress(null);
     }
   }, [scriptTitle]);
 
@@ -186,70 +140,44 @@ function App() {
   }, []);
 
   const handleCharacterVoiceChange = useCallback(async (characterName: string, newVoiceSettings: VoiceSettings) => {
-    console.log('🎵 Voice change for', characterName, ':', newVoiceSettings);
-    
-    // Update local state immediately for responsive UI
     setCharacters(prev => prev.map(char =>
       char.name === characterName
         ? { ...char, voiceSettings: newVoiceSettings }
         : char
     ));
 
-    // Persist to database if character has an ID (from saved script)
     const character = characters.find(c => c.name === characterName);
     if (character?.id) {
-      console.log('💾 Saving voice settings to database for character:', character.id);
-      const result = await updateCharacterVoiceSettings(character.id, newVoiceSettings);
-      if (result.error) {
-        console.error('Failed to update voice settings:', result.error);
-      } else {
-        console.log('✅ Voice settings saved successfully');
-      }
-    } else {
-      console.log('⚠️ Character has no database ID, voice settings saved locally only');
+      await updateCharacterVoiceSettings(character.id, newVoiceSettings);
     }
   }, [characters, updateCharacterVoiceSettings]);
 
-  // 🔥 NEW: Always show scene selector after character selection
   const handleStartPractice = useCallback(() => {
-    console.log('🚀 App: handleStartPractice called - always showing scene selector');
     setShowStartingPointSelector(true);
   }, []);
 
-  const handleStartingPointSelect = useCallback((actNumber: number, sceneNumber: number, lineIndex: number) => {
-    console.log('🚀 App: Starting from Act', actNumber, 'Scene', sceneNumber, 'Line', lineIndex);
+  const handleStartingPointSelect = useCallback((lineIndex: number) => {
     setStartingLineIndex(lineIndex);
     setCurrentState('practice');
     setShowStartingPointSelector(false);
   }, []);
 
-  // SIMPLIFIED: Save progress directly to localStorage WITHOUT updating state
-  // This prevents the re-render loop that was causing the session to reset
   const handleProgressUpdate = useCallback((progress: UserProgress) => {
-    console.log('📊 App: Progress update - saving to localStorage only');
-    
-    // Save progress directly to localStorage WITHOUT calling setUserProgress
-    // This prevents the parent component from re-rendering during the session
     const progressKey = `${scriptTitle}-${selectedCharacter}`;
     try {
-      // Convert Set to Array for JSON serialization
       const progressToSave = {
         ...progress,
         completedLines: Array.from(progress.completedLines)
       };
       localStorage.setItem(progressKey, JSON.stringify(progressToSave));
-      console.log('📊 App: Progress saved to localStorage successfully');
       
-      // Calculate average accuracy for this session and update performance tracking
       const scores = Object.values(progress.accuracyScores);
       const averageAccuracy = scores.length > 0 
         ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
         : 0;
       
       if (averageAccuracy > 0 && selectedCharacter) {
-        // Update character performance tracking
         updateCharacterPerformance(scriptTitle, selectedCharacter, averageAccuracy);
-        // Update script history (last selected character)
         updateScriptHistory(scriptTitle, selectedCharacter);
       }
     } catch (error) {
@@ -258,13 +186,11 @@ function App() {
   }, [scriptTitle, selectedCharacter, updateCharacterPerformance, updateScriptHistory]);
 
   const handleBackToCharacterSelection = useCallback(() => {
-    console.log('🔙 App: Back to character selection');
     setCurrentState('character-selection');
     setSelectedCharacter(null);
   }, []);
 
   const handleBackToLibrary = useCallback(() => {
-    console.log('🔙 App: Back to library');
     setCurrentState('library');
     setCharacters([]);
     setLines([]);
@@ -277,13 +203,8 @@ function App() {
 
   const handleStartingPointClose = useCallback(() => {
     setShowStartingPointSelector(false);
-    // When closing scene selector, go back to character selection
     setCurrentState('character-selection');
   }, []);
-
-
-
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -298,34 +219,7 @@ function App() {
       
       <main className="container mx-auto px-4 py-8">
         {currentState === 'library' && (
-          <div className="space-y-8">
-            <ScriptLibrary onScriptSelect={handleScriptLoaded} />
-            
-            <div className="text-center">
-              <div className="inline-block bg-card rounded-lg p-1 shadow-sm border border-border">
-                <button
-                  onClick={() => setCurrentState('upload')}
-                  className="px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:shadow-lg transition-all duration-200 font-medium"
-                >
-                  Upload New Script
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {currentState === 'upload' && (
-          <div>
-            <div className="mb-6">
-              <button
-                onClick={handleBackToLibrary}
-                className="text-muted-foreground hover:text-foreground transition-colors duration-200 text-sm"
-              >
-                ← Back to Library
-              </button>
-            </div>
-            <ScriptUpload onScriptLoaded={handleScriptLoaded} />
-          </div>
+          <ScriptLibrary onScriptSelect={handleScriptLoaded} />
         )}
         
         {currentState === 'character-selection' && (
@@ -367,12 +261,8 @@ function App() {
             practiceMode={practiceMode}
             setPracticeMode={setPracticeMode}
             template={selectedTemplate as 'chat' | 'classic' | 'large-print' | 'teleprompter' | 'theatre'}
-            onSceneComplete={() => {
-              handleBackToCharacterSelection();
-            }}
-            onGoToPreviousScene={() => {
-              handleBackToCharacterSelection();
-            }}
+            onSceneComplete={handleBackToCharacterSelection}
+            onGoToPreviousScene={handleBackToCharacterSelection}
             onBack={handleBackToCharacterSelection}
             onProgressUpdate={handleProgressUpdate}
             speak={speak}
@@ -410,7 +300,6 @@ function App() {
         )}
       </main>
 
-      {/* Starting Point Selector Modal - Now Always Shown After Character Selection */}
       <StartingPointSelector
         isOpen={showStartingPointSelector}
         onClose={handleStartingPointClose}
