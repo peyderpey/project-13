@@ -462,7 +462,6 @@ const translations: Record<Language, Translations> = {
       minutes: 'minutes',
       hours: 'hours'
     },
-,
 
     // Drawer menu
     drawer: {
